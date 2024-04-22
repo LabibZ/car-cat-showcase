@@ -10,7 +10,7 @@ import { generateCarImageUrl } from "@/utils";
 
 interface CarDetailsProps {
   isOpen: boolean;
-  closeMode: () => void;
+  closeModal: () => void;
   car: CarProps;
 }
 
