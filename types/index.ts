@@ -56,3 +56,17 @@ export interface ShowMoreProps {
 export interface HomeProps {
   searchParams: FilterProps;
 }
+
+export interface PaintData {
+  paintData: {
+    paintCombinations: {
+      [combinationKey: string]: {
+        mapped: {
+          [paintId: string]: {
+            paintDescription: string;
+          };
+        };
+      };
+    };
+  };
+}

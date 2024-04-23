@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 
 import { CarProps } from "@/types";
@@ -16,8 +16,29 @@ const CarCard = ({ car }: CarCardProps) => {
   const { city_mpg, year, make, model, transmission, drive } = car;
 
   const [isOpen, setIsOpen] = useState(false);
-
   const carRent = calculateCarRent(city_mpg, year);
+
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [paintId, setPaintId] = useState<string>("");
+  const [paintDescription, setPaintDescription] = useState<string>("");
+  useEffect(() => {
+    generateCarImageUrl(car, "1")
+      .then((url) => {
+        setImageUrl(url);
+
+        // Extract paintId and paintDescription from the URL
+        if (url) {
+          const urlParams = new URLSearchParams(url);
+          const paintId = urlParams.get("paintid") as string;
+          const paintDescription = urlParams.get("paintdescription") as string;
+          setPaintId(paintId);
+          setPaintDescription(paintDescription);
+        }
+      })
+      .catch((error) => {
+        console.error("Error generating car image URL:", error);
+      });
+  }, [car]);
 
   return (
     <div className="car-card group">
@@ -33,13 +54,17 @@ const CarCard = ({ car }: CarCardProps) => {
       </p>
 
       <div className="relative w-full h-40 my-3 object-contain">
-        <Image
-          src={generateCarImageUrl(car, "1")}
-          alt="car model"
-          fill
-          priority
-          className="object-contain"
-        />
+        <div>
+          {imageUrl && (
+            <Image
+              src={imageUrl}
+              alt={`${car.make} ${car.model}`}
+              fill
+              priority
+              className="object-contain"
+            />
+          )}
+        </div>
       </div>
       <div className="relative flex w-full mt-2">
         <div className="flex group-hover:invisible w-full justify-between text-gray">
@@ -77,6 +102,8 @@ const CarCard = ({ car }: CarCardProps) => {
         isOpen={isOpen}
         closeModal={() => setIsOpen(false)}
         car={car}
+        paintId={paintId}
+        paintDescription={paintDescription}
       />
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Fragment } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 
 import { CarProps } from "@/types";
@@ -12,9 +12,51 @@ interface CarDetailsProps {
   isOpen: boolean;
   closeModal: () => void;
   car: CarProps;
+  paintId: string;
+  paintDescription: string;
 }
 
-const CarDetails = ({ isOpen, closeModal, car }: CarDetailsProps) => {
+const CarDetails = ({
+  isOpen,
+  closeModal,
+  car,
+  paintId,
+  paintDescription,
+}: CarDetailsProps) => {
+  const [mainImageUrl, setMainImageUrl] = useState<string | null>(null);
+  const [additionalImageUrls, setAdditionalImageUrls] = useState<
+    (string | null)[]
+  >([]);
+
+  useEffect(() => {
+    const fetchImages = async () => {
+      try {
+        // Fetch main image URL
+        const mainImageUrl = await generateCarImageUrl(
+          car,
+          "1",
+          paintId,
+          paintDescription
+        );
+        setMainImageUrl(mainImageUrl);
+
+        // Fetch additional image URLs
+        const additionalAngles = ["29", "33", "13"];
+        const additionalImagePromises = additionalAngles.map((angle) =>
+          generateCarImageUrl(car, angle, paintId, paintDescription)
+        );
+        const additionalImageUrls = await Promise.all(additionalImagePromises);
+        setAdditionalImageUrls(additionalImageUrls);
+      } catch (error) {
+        console.error("Error fetching car images:", error);
+      }
+    };
+
+    if (isOpen) {
+      fetchImages();
+    }
+  }, [isOpen, car, paintId, paintDescription]);
+
   return (
     <>
       <Transition appear show={isOpen} as={Fragment}>
@@ -58,42 +100,33 @@ const CarDetails = ({ isOpen, closeModal, car }: CarDetailsProps) => {
                   </button>
                   <div className="flex-1 flex flex-col gap-3">
                     <div className="relative w-full h-40 bg-pattern bg-cover bg-center rounded-lg">
-                      <Image
-                        src={generateCarImageUrl(car, "1")}
-                        alt="car model"
-                        fill
-                        priority
-                        className="object-contain"
-                      />
+                      {mainImageUrl && (
+                        <Image
+                          src={mainImageUrl}
+                          alt="car model"
+                          fill
+                          priority
+                          className="object-contain"
+                        />
+                      )}
                     </div>
                     <div className="flex gap-3">
-                      <div className="flex-1 relative w-full h-24 bg-primary-blue-100 rounded-lg">
-                        <Image
-                          src={generateCarImageUrl(car, "29")}
-                          alt="car model"
-                          fill
-                          priority
-                          className="object-contain"
-                        />
-                      </div>
-                      <div className="flex-1 relative w-full h-24 bg-primary-blue-100 rounded-lg">
-                        <Image
-                          src={generateCarImageUrl(car, "33")}
-                          alt="car model"
-                          fill
-                          priority
-                          className="object-contain"
-                        />
-                      </div>
-                      <div className="flex-1 relative w-full h-24 bg-primary-blue-100 rounded-lg">
-                        <Image
-                          src={generateCarImageUrl(car, "13")}
-                          alt="car model"
-                          fill
-                          priority
-                          className="object-contain"
-                        />
-                      </div>
+                      {additionalImageUrls.map((imageUrl, index) => (
+                        <div
+                          key={index}
+                          className="flex-1 relative w-full h-24 bg-primary-blue-100 rounded-lg"
+                        >
+                          {imageUrl && (
+                            <Image
+                              src={imageUrl}
+                              alt="car model"
+                              fill
+                              priority
+                              className="object-contain"
+                            />
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
 
